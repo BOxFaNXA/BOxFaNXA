@@ -1,13 +1,13 @@
 /*:
- *  @author boxlunch
+ * @author boxlunch
  * @plugindesc 锻造插件
  * @target MZ MV
  * @help
  * 使用Scene_SmithingOpen(插件参数里的真·锻造列表序号,是否可以改变名字,简介);脚本即可输打开锻造界面
  * 
- * 如果插件参数一片空白，点击文本再切换回结构即可解除
- * MV选择空的列表就行了。
+ * 示例Scene_SmithingOpen(1,1)；
  * 
+ * 插件参数的列表序号从0开始，0既是一。
  * 
  * 
  * @param box smithing List
@@ -15,16 +15,6 @@
  * @text 锻造列表
  * @type struct<TestStruct>[]
  * @default []
- * 
- * @param RMSelect
- * @text 引擎参数
- * @type select
- * @option RMMV
- * @value 0
- * @option RMMZ
- * @value 1
- * @desc 选择你使用的引擎，这取决于插件是否能正常运行
- * @default 0
  * 
  * 
  * @param DuLiBooleanParam
@@ -72,6 +62,30 @@
  * @param duzaowenben
  * @text 锻造按钮文本
  * @desc 这是锻造按钮的文本
+ * @type string
+ * @default abc
+ * 
+ * @param duzaowenben1
+ * @text 锻造改名弹窗显示文本
+ * @desc 锻造改名弹窗显示文本
+ * @type string
+ * @default abc
+ * 
+ * @param duzaowenben2
+ * @text 锻造改名弹窗显示文本
+ * @desc 锻造改名弹窗显示文本
+ * @type string
+ * @default abc
+ * 
+ * @param duzaowenben3
+ * @text 锻造改简介弹窗显示文本
+ * @desc 锻造改简介弹窗显示文本
+ * @type string
+ * @default abc
+ * 
+ * @param duzaowenben4
+ * @text 锻造改简介弹窗显示文本
+ * @desc 锻造改简介弹窗显示文本
  * @type string
  * @default abc
  * */
@@ -190,6 +204,10 @@ box._duliweapons  = Number(box.Parameters['duliweapons']);
 box._duliarmors  = Number(box.Parameters['duliarmors']);
 box._duliwitems  = Number(box.Parameters['duliwitems']);
 box.duzaowenben = box.Parameters['duzaowenben'];
+box.duzaowenben1 = box.Parameters['duzaowenben1'];
+box.duzaowenben2 = box.Parameters['duzaowenben2'];
+box.duzaowenben3 = box.Parameters['duzaowenben3'];
+box.duzaowenben4 = box.Parameters['duzaowenben4'];
 
 if(box._DuLiBooleanParam){
 box.sing.DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
@@ -601,65 +619,141 @@ class Box_Smithing{
         box._smithing_List.forEach(element => {
             this.smithing_List1 = [];
             const smithing_List2 = JSON.parse(element);
-            this.smithing_List1.push(smithing_List2.ComboSmithing,
-                smithing_List2.Smithingtoid,smithing_List2.SmithinggoldNumber,smithing_List2.SmithingWeaponS,smithing_List2.SmithingArmorS,smithing_List2.SmithingItemS,smithing_List2.SmithingBoolean,smithing_List2.youxianji);
+            this.smithing_List1.push(smithing_List2.ComboSmithing,smithing_List2.Smithingtoid,smithing_List2.SmithinggoldNumber,smithing_List2.SmithingWeaponS,smithing_List2.SmithingArmorS,smithing_List2.SmithingItemS,smithing_List2.SmithingBoolean,smithing_List2.youxianji);
             this.smithing_List.push(this.smithing_List1)   
         }); 
         return this.smithing_List
     }
-    static setSmithingData1(data,data1){
-        for(var i=0;i<data.length;i++){
-            this.setSmithingData_bug(data[i],data1);
-        }
-        }
         static setSmithingData_bug(data,data1){
-            for (const key in data) {
-                const element = JSON.parse(data[key]);
-                this.setSmithingData_bug1(element,data1);
-            }
+        for (const key in data) {
+        if(key=='WeaponSmithingQuantity'||key=='ArmorSmithingQuantity'||key=='ItemSmithingQuantity'){
+            continue;
         }
-        static setSmithingData_bug1(data,data1){
-            for(var i=0;i<data1.length;i++){
-                if(SmithingOpen(data,data1[i])) return SmithingOpen(data,data1[i]);
+        const element = JSON.parse(data[key]),
+        element2 = Object.keys(data),
+        element1 = JSON.parse(data[element2[1]]);
+        if(SmithingOpen(element,element1,data1))  return SmithingOpen(element,element1,data1);
             }
         }
     static setSmithingData2(data,data1){
     if(!data1[0]){
+        this.laofuzi = []
+        this.laofuzi1 = []
+        this.WQ = []
         for(var i=0;i<data.length;i++){
         for (const key in data[i]) {
-            if (Object.hasOwnProperty.call(data[i], key)) {
-                const element = data[i][key];
+            if(key=='WeaponSmithingQuantity'||key=='ArmorSmithingQuantity'||key=='ItemSmithingQuantity'){
+                continue;
+            }
+            const element = JSON.parse(data[i][key]),
+            element2 = Object.keys(data[i]),
+            element1 = JSON.parse(data[i][element2[1]]);
+            for(var j=0;j<element.length;j++){
+                if($gameParty.ItemNumber($dataWeapons[element[j]])<Number(element1[j])){
+                    return false;
+                }else{
+                    this.laofuzi.push(element);
+                    this.laofuzi1.push(element1);
+                }
             }
         }
         }
+        this.WQ.push(this.laofuzi,this.laofuzi1,'wanquanTRUE');
+      return this.WQ
     }else{
-        for(var i=0;i<data.length;i++){
-            console.log(this.setSmithingData1(data,data1[1]));
-            if(this.setSmithingData1(data,data1[1])) return this.setSmithingData1(data);
+        for(var i=0;i<data1[1].length;i++){
+            switch (Number(data1[1][i])){
+                case 1:
+                return true;
+                case 2:
+                if(this.setSmithingData_bug(data[0],data1[1][i]))    return this.setSmithingData_bug(data[0],data1[1][i]);
+                case 3:
+                if(this.setSmithingData_bug(data[1],data1[1][i]))    return this.setSmithingData_bug(data[0],data1[1][i]);
+                case 4:
+                if(this.setSmithingData_bug(data[2],data1[1][i]))    return this.setSmithingData_bug(data[0],data1[1][i]);
+                }
         }
     }
     }
+    static setSmithingSHURU(data,dataprice,data1){
+const nameinitialize = data.name,
+nameinitialize1 = data.description;
+if(box.Data4) {
+    const setSR = prompt(box.duzaowenben1,box.duzaowenben2);
+    data.name = setSR
+}
+if(box.Data5) {
+    const setSR1 = prompt(box.duzaowenben3,box.duzaowenben4);
+    data.description = setSR1
+}
+$gameParty.gainItem(data, 1);
+switch (data1[data1.length-1]){
+case 'weapontrue':
+    for(var i=0;i<data1[0].length;i++){
+        $gameParty.loseItem($dataWeapons[data1[0][i]], Number(data1[1][i]));
+};
+break
+case 'armortrue':
+    for(var i=0;i<data1[0].length;i++){
+        $gameParty.loseItem($dataArmors[data1[0][i]], Number(data1[1][i]));
+};
+break
+case 'itemtrue':
+    for(var i=0;i<data1[0].length;i++){
+        $gameParty.loseItem($dataItems[data1[0][i]], Number(data1[1][i]));
+    }
+break
+case 'wanquanTRUE':
+    for(var i=0;i<data1[0].length;i++){
+        for(var j=0;j<data1[0][i][0].length;j++){
+            $gameParty.loseItem($dataWeapons[data1[0][i][0][j]], Number(data1[1][i][0][j]))
+        }
+        for(var j=0;j<data1[0][i][1].length;j++){
+            $gameParty.loseItem($dataArmors[data1[0][i][1][j]], Number(data1[1][i][1][j]))
+        }
+        for(var j=0;j<data1[0][i][2].length;j++){
+            $gameParty.loseItem($dataItems[data1[0][i][2][j]], Number(data1[1][i][2][j]))
+        }
+    }
+break
+default:
+    $gameParty.loseGold(dataprice);
+}
+if(box.Data4) data.name = nameinitialize
+if(box.Data5) data.description = nameinitialize1
+    }
 }
 
-function SmithingOpen(data,Data4) {
-    var weapontrue = 'weapontrue',
-    armortrue = 'armortrue',
-    itemtrue = 'itemtrue';
-switch (Number(Data4)){
+function SmithingOpen(data,data1,Data4) {
+    const weapontrue = 'weapontrue',
+   armortrue = 'armortrue',
+   itemtrue = 'itemtrue';
+   switch (Number(Data4)){
     case 1:
     return true;
     case 2:
             for(var j=0;j<data.length;j++){
-            if($gameParty.ItemNumber($dataArmors[data[j]])) return weapontrue;
+                if($gameParty.ItemNumber($dataWeapons[data[j]])<Number(data1[j])) {
+                    break;
+                }else if($gameParty.ItemNumber($dataWeapons[data[j]])>= Number(data1[j])&&j==data.length-1){
+                    return [data,data1,weapontrue];
+                }
     }
     case 3:
         for(var j=0;j<data.length;j++){
-        if($gameParty.ItemNumber($dataArmors[data[j]])) return armortrue;
+            if($gameParty.ItemNumber($dataArmors[data[j]])<Number(data1[j])) {
+                break;
+            }else if($gameParty.ItemNumber($dataArmors[data[j]])>= Number(data1[j])&&j==data.length-1){
+                return [data,data1,armortrue];
+            }
     }
     case 4:
         for(var j=0;j<data.length;j++){
-        console.log($gameParty.ItemNumber($dataArmors[data[j]]));
-        if($gameParty.ItemNumber($dataArmors[data[j]])) return itemtrue;
+        if($gameParty.ItemNumber($dataItems[data[j]])<Number(data1[j])) {
+            break;
+        }else if($gameParty.ItemNumber($dataItems[data[j]])>= Number(data1[j])&& j==data.length-1){
+            return [data,data1,itemtrue]
+        }
     }
 }
 }
@@ -815,10 +909,10 @@ Scene_Smithing.prototype.activateBuyWindow = function() {
 
 Scene_Smithing.prototype.onBuyOk = function() {
     this._item = this._buyWindow.item();
-    const buyingPrice = this.buyingPrice();
-    if(box.Data4 || box.Data5)  Box_Smithing.setSmithingData1(this._item);
-    $gameParty.gainItem(this._item, 1);
-    $gameParty.loseGold(buyingPrice);
+    const buyingPrice = this.buyingPrice(),
+    itemprice = this._buyWindow.itemprice(this._item),
+    youxianji = this._buyWindow.youxianji(this._item);
+    Box_Smithing.setSmithingSHURU(this._item,buyingPrice,Box_Smithing.setSmithingData2(itemprice,youxianji));
     this._buyWindow.activate();
     this._buyWindow.refresh();
     this._goldWindow.refresh();
